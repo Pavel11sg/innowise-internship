@@ -19,6 +19,7 @@ public class OrderAnalyticsTest {
 	private Customer customer2;
 	private OrderItem itemA, itemB, itemC;
 	private List<Order> orders;
+	private static final StoreMetrics storeMetrics = new StoreMetrics();
 
 	@BeforeEach
 	void setUp() {
@@ -75,48 +76,26 @@ public class OrderAnalyticsTest {
 
 	@Test
 	void testUniqueCities() {
-		List<String> uniqueCities = orders.stream()
-				.map(Order::getCustomer)
-				.map(Customer::getCity)
-				.distinct()
-				.toList();
+		List<String> uniqueCities = storeMetrics.getUniqueCities(orders);
 		assertEquals(2, uniqueCities.size());
 		assertTrue(uniqueCities.containsAll(List.of("Moscow", "Berlin")));
 	}
 
 	@Test
 	void testTotalIncomeForDeliveredOrders() {
-		double totalPrice = orders.stream()
-				.filter(o -> o.getStatus() == OrderStatus.DELIVERED)
-				.flatMap(o -> o.getItems().stream())
-				.mapToDouble(i -> i.getQuantity() * i.getPrice())
-				.sum();
-		// itemA (2×500) + itemB (1×100) + itemB (1×100) = 1000 + 100 + 100 = 1200
+		double totalPrice = storeMetrics.getTotalPrice(orders);
 		assertEquals(1200.0, totalPrice);
 	}
 
 	@Test
 	void testMostPopularProduct() {
-		String popularProduct = orders.stream()
-				.flatMap(order -> order.getItems().stream())
-				.collect(Collectors.toMap(OrderItem::getProductName, OrderItem::getQuantity, Integer::sum))
-				.entrySet().stream()
-				.max(Map.Entry.comparingByValue())
-				.map(Map.Entry::getKey)
-				.orElse("No Data");
-		assertEquals("Phone", popularProduct); // 2 (itemA) + 3 (itemC) = 5
+		String popularProduct = storeMetrics.getPopularProduct(orders);
+		assertEquals("Phone", popularProduct);
 	}
 
 	@Test
 	void testAverageCheckForDeliveredOrders() {
-		double averageCheck = orders.stream()
-				.filter(o -> o.getStatus() == OrderStatus.DELIVERED)
-				.mapToDouble(o -> o.getItems().stream()
-						.mapToDouble(i -> i.getQuantity() * i.getPrice())
-						.sum())
-				.average()
-				.orElse(0.0);
-		// Заказ 1: 1000 + 100 = 1100, заказ 3: 100 => среднее = (1100 + 100) / 2 = 600
+		double averageCheck = storeMetrics.getAverageCheck(orders);
 		assertEquals(600.0, averageCheck);
 	}
 
@@ -125,12 +104,7 @@ public class OrderAnalyticsTest {
 		for (int i = 0; i < 5; i++) {
 			orders.add(createOrder("Extra" + i, customer1, OrderStatus.NEW, itemB));
 		}
-		List<Customer> topCustomers = orders.stream()
-				.collect(Collectors.groupingBy(Order::getCustomer, Collectors.counting()))
-				.entrySet().stream()
-				.filter(entry -> entry.getValue() > 5)
-				.map(Map.Entry::getKey)
-				.toList();
+		List<Customer> topCustomers = storeMetrics.getTopNumberOfCustomer(orders, 5);
 		assertEquals(1, topCustomers.size());
 		assertEquals(customer1, topCustomers.get(0));
 	}

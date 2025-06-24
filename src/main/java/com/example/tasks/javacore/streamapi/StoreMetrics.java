@@ -1,28 +1,29 @@
 package com.example.tasks.javacore.streamapi;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StoreMetrics {
-	public static void main(String[] args) {
 
-		List<Order> orders = new ArrayList<>();
-
-		List<String> uniqueCities = orders.stream()
+	public List<String> getUniqueCities(List<Order> orders) {
+		return orders.stream()
 				.map(Order::getCustomer)
 				.map(Customer::getCity)
 				.distinct()
 				.toList();
+	}
 
-		double totalPrice = orders.stream()
+	public double getTotalPrice(List<Order> orders) {
+		return orders.stream()
 				.filter(o -> o.getStatus() == OrderStatus.DELIVERED)
 				.flatMap(o -> o.getItems().stream())
 				.mapToDouble(i -> i.getQuantity() * i.getPrice())
 				.sum();
+	}
 
-		String popularProduct = orders.stream()
+	public String getPopularProduct(List<Order> orders) {
+		return orders.stream()
 				.flatMap(order -> order.getItems().stream())
 				.collect(Collectors.toMap(
 						OrderItem::getProductName,
@@ -34,8 +35,10 @@ public class StoreMetrics {
 				.max(Map.Entry.comparingByValue())
 				.map(Map.Entry::getKey)
 				.orElse("No data");
+	}
 
-		double averageCheck = orders.stream()
+	public double getAverageCheck(List<Order> orders) {
+		return orders.stream()
 				.filter(o -> o.getStatus() == OrderStatus.DELIVERED)
 				.mapToDouble(o -> o.getItems().stream()
 						.mapToDouble(i -> i.getQuantity() * i.getPrice())
@@ -43,15 +46,17 @@ public class StoreMetrics {
 				)
 				.average()
 				.orElse(0.0);
+	}
 
-		List<Customer> topCustomers = orders.stream()
+	public List<Customer> getTopNumberOfCustomer(List<Order> orders, int topNumber) {
+		return orders.stream()
 				.collect(Collectors.groupingBy(
 						Order::getCustomer,
 						Collectors.counting()
 				))
 				.entrySet()
 				.stream()
-				.filter(entry -> entry.getValue() > 5)
+				.filter(entry -> entry.getValue() > topNumber)
 				.map(Map.Entry::getKey)
 				.toList();
 	}
