@@ -1,6 +1,7 @@
 package com.example.tasks.userservice.repository;
 
 import com.example.tasks.userservice.model.Card;
+import com.example.tasks.userservice.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,11 +17,15 @@ public interface CardRepository extends JpaRepository<Card, Long> {
 
 	List<Card> findAllById(Iterable<Long> ids);
 
-	List<Card> findByUserId(Long userId);
+	List<Card> findAllByUserId(Long userId);
+
+	Optional<Card> findByUserIdAndId(Long userId, Long cardId);
+
+	boolean existsByUserAndNumber(User user, String number);
 
 	void deleteById(Long id);
 
-	@Query("select c from Card c where c.user.id = :userId and c.expiration_date > current_date")
+	@Query("select c from Card c where c.user.id = :userId and c.expirationDate > current_date")
 	List<Card> findValidCardsByUserId(@Param("userId") Long userId);
 
 	@Modifying

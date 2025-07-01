@@ -19,7 +19,7 @@ public class Card {
 	@Column(name = "holder", nullable = false)
 	private String holder;
 	@Column(name = "expiration_date", nullable = false)
-	private LocalDate expiration_date;
+	private LocalDate expirationDate;
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;

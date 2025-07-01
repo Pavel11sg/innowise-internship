@@ -20,7 +20,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	void deleteById(Long id);
 
-	@Query("select u from User u where u.birth_date between :start and :end")
+	boolean existsByEmail(String email);
+
+	@Query("select u from User u where u.birthDate between :start and :end")
 	List<User> findUsersBornBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
 	@Query(value = "select * from users where email like '%@' || :domain", nativeQuery = true)

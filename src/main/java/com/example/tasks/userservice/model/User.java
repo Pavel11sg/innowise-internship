@@ -20,7 +20,7 @@ public class User {
 	@Column(name = "surname", nullable = false)
 	private String surname;
 	@Column(name = "birth_date")
-	private LocalDate birth_date;
+	private LocalDate birthDate;
 	@Column(name = "email", unique = true, nullable = false)
 	private String email;
 	@OneToMany(mappedBy = "user",
