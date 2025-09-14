@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +30,7 @@ public class CardServiceImpl implements CardService {
 	@Override
 	@Transactional
 	@CacheEvict(value = "users", key = "#p0")
-	public CardResponseDto createCard(Long userId, CardRequestDto cardRequestDto) {
+	public CardResponseDto createCard(UUID userId, CardRequestDto cardRequestDto) {
 		User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 		if (cardRepository.existsByUserAndNumber(user, cardRequestDto.getNumber())) {
 			throw new DuplicateCardException("Card with number " + cardRequestDto.getNumber() + " already exists for this user");
@@ -43,7 +44,7 @@ public class CardServiceImpl implements CardService {
 	@Override
 	@Transactional
 	@CacheEvict(value = "cards", key = "#p0 + '_' + #p1")
-	public CardResponseDto updateCard(Long userId, Long cardId, CardRequestDto cardRequestDto) {
+	public CardResponseDto updateCard(UUID userId, UUID cardId, CardRequestDto cardRequestDto) {
 		Card card = cardRepository.findById(cardId).orElseThrow(() -> new CardNotFoundException("Card not found with cardId: " + cardId));
 		if (!card.getUser().getId().equals(userId)) {
 			throw new CardNotOwnedException("Card with id " + cardId + " does not belong to user " + userId);
@@ -56,7 +57,7 @@ public class CardServiceImpl implements CardService {
 	@Override
 	@Transactional(readOnly = true)
 	@Cacheable(value = "cards", key = "#p0 + '_' + #p1")
-	public CardResponseDto getCardByUserIdAndCardId(Long userId, Long cardId) {
+	public CardResponseDto getCardByUserIdAndCardId(UUID userId, UUID cardId) {
 		Card card = cardRepository.findByUserIdAndId(userId, cardId)
 				.orElseThrow(() -> new CardNotFoundException("Card not found with id: " + cardId + " for user: " + userId));
 		return cardMapper.toResponseDto(card);
@@ -64,7 +65,7 @@ public class CardServiceImpl implements CardService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<CardResponseDto> getAllCardsByUserId(Long userId) {
+	public List<CardResponseDto> getAllCardsByUserId(UUID userId) {
 		if (!userRepository.existsById(userId)) {
 			throw new UserNotFoundException("User not found with id: " + userId);
 		}
@@ -74,7 +75,7 @@ public class CardServiceImpl implements CardService {
 	@Override
 	@Transactional
 	@CacheEvict(value = "cards", key = "#p0 + '_' + #p1")
-	public void deleteCard(Long userId, Long cardId) {
+	public void deleteCard(UUID userId, UUID cardId) {
 		if (!userRepository.existsById(userId)) {
 			throw new UserNotFoundException("User not found with id: " + userId);
 		}

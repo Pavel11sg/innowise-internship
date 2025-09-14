@@ -8,11 +8,13 @@ import com.example.tasks.userservice.model.User;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class TestUserFactory {
 
 	public static User createUserEntity() {
 		User user = new User();
+		user.setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		user.setName("testName");
 		user.setSurname("testSurname");
 		user.setEmail("testNametestSurname@example.com");
@@ -40,14 +42,14 @@ public class TestUserFactory {
 
 	public static UserResponseDto createUserResponseDto() {
 		CardResponseDto cardResponseDto = new CardResponseDto();
-		cardResponseDto.setId(1L);
+		cardResponseDto.setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		cardResponseDto.setLastFourDigits("1111");
 		cardResponseDto.setMaskedHolder("testName t**********");
-		cardResponseDto.setExpirationDate(LocalDate.now().plusYears(1L));
+		cardResponseDto.setExpirationDate(LocalDate.now().plusYears(1));
 		List<CardResponseDto> cards = new ArrayList<>();
 		cards.add(cardResponseDto);
 		UserResponseDto userResponseDto = new UserResponseDto();
-		userResponseDto.setId(1L);
+		userResponseDto.setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		userResponseDto.setName("testName");
 		userResponseDto.setSurname("testSurname");
 		userResponseDto.setMaskedEmail("t***************m@example.com");
@@ -56,7 +58,7 @@ public class TestUserFactory {
 		return userResponseDto;
 	}
 
-	public static UserResponseDto createUserResponseDto(Long id, String maskedEmail) {
+	public static UserResponseDto createUserResponseDto(UUID id, String maskedEmail) {
 		UserResponseDto userResponseDto = createUserResponseDto();
 		userResponseDto.setId(id);
 		userResponseDto.setMaskedEmail(maskedEmail);

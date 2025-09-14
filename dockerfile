@@ -10,7 +10,7 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-jammy AS final
 WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
-EXPOSE 8080
+COPY --from=builder /app/target/*.jar user-service.jar
+EXPOSE 8082
 COPY src/main/resources/db.changelog ./db.changelog
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "user-service.jar"]

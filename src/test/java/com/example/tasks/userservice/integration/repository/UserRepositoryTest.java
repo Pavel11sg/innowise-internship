@@ -14,6 +14,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,6 +35,7 @@ class UserRepositoryTest {
 	@Test
 	void findUsersBornBetween_ShouldFilterByDateRange() {
 		User user1 = new User();
+		user1.setId(UUID.randomUUID());
 		user1.setName("John");
 		user1.setSurname("Doe");
 		user1.setEmail("test1@example.com");
@@ -41,6 +43,7 @@ class UserRepositoryTest {
 		userRepository.save(user1);
 
 		User user2 = new User();
+		user2.setId(UUID.randomUUID());
 		user2.setName("Ben");
 		user2.setSurname("Parker");
 		user2.setEmail("test2@example.com");
@@ -53,12 +56,13 @@ class UserRepositoryTest {
 		);
 
 		assertThat(users).hasSize(1);
-		assertThat(users.get(0).getBirthDate()).isEqualTo("1990-01-01");
+		assertThat(users.get(0).getBirthDate()).isEqualTo(LocalDate.of(1990, 1, 1));
 	}
 
 	@Test
 	void findByEmailEndingWith_ShouldFilterByDomain() {
 		User user = new User();
+		user.setId(UUID.randomUUID());
 		user.setName("John");
 		user.setSurname("Doe");
 		user.setBirthDate(LocalDate.of(1990,1,1));

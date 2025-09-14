@@ -10,25 +10,27 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface CardRepository extends JpaRepository<Card, Long> {
-	Optional<Card> findById(Long id);
+public interface CardRepository extends JpaRepository<Card, UUID> {
+	Optional<Card> findById(UUID id);
 
-	List<Card> findAllById(Iterable<Long> ids);
+	List<Card> findAllById(Iterable<UUID> ids);
 
-	List<Card> findAllByUserId(Long userId);
+	List<Card> findAllByUserId(UUID userId);
 
-	Optional<Card> findByUserIdAndId(Long userId, Long cardId);
+	@Query("SELECT c FROM Card c WHERE c.user.id = :userId AND c.id = :cardId")
+	Optional<Card> findByUserIdAndId(@Param("userId") UUID userId, @Param("cardId") UUID cardId);
 
 	boolean existsByUserAndNumber(User user, String number);
 
-	void deleteById(Long id);
+	void deleteById(UUID id);
 
 	@Query("select c from Card c where c.user.id = :userId and c.expirationDate > current_date")
-	List<Card> findValidCardsByUserId(@Param("userId") Long userId);
+	List<Card> findValidCardsByUserId(@Param("userId") UUID userId);
 
 	@Modifying(clearAutomatically = true)
-	@Query(value = "update card_info set holder = :holder where user_id = :userId", nativeQuery = true)
-	int updateCardHolderByUser(@Param("userId") Long userId, @Param("holder") String holder);
+	@Query("UPDATE Card c SET c.holder = :holder WHERE c.user.id = :userId")
+	int updateCardHolderByUser(@Param("userId") UUID userId, @Param("holder") String holder);
 }

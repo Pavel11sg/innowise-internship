@@ -4,15 +4,18 @@ import com.example.tasks.userservice.dto.UserRequestDto;
 import com.example.tasks.userservice.dto.UserResponseDto;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface UserService {
-	UserResponseDto createUser(UserRequestDto userRequestDto);
+	UserResponseDto createUser(UserRequestDto userRequestDto, String id);
 
-	UserResponseDto updateUser(Long id, UserRequestDto userRequestDto);
+	UserResponseDto updateUser(UUID id, UserRequestDto userRequestDto, String userIdFromToken);
 
-	void deleteUser(Long id);
+	void deleteUser(UUID id, String userId, String userRoles);
 
-	UserResponseDto getUserById(Long id);
+	UserResponseDto getUserById(UUID id, String userId);
 
-	List<UserResponseDto> getAllUsers();
+	List<UserResponseDto> getAllUsers(String roles);
+
+	List<UserResponseDto> getUsersByIds(List<UUID> ids, String roles);
 }

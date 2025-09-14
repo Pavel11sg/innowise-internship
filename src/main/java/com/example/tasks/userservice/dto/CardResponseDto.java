@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -15,7 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @EqualsAndHashCode
 public class CardResponseDto {
-	private Long id;
+	private UUID id;
 	private String lastFourDigits;
 	private String maskedHolder;
 	@JsonFormat(pattern = "yyyy-MM-dd")

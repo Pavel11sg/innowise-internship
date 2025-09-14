@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -42,13 +43,13 @@ class CardServiceImplTest {
 
 	private User createUser() {
 		User user = new User();
-		user.setId(1L);
+		user.setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		return user;
 	}
 
 	private Card createCard() {
 		Card card = new Card();
-		card.setId(1L);
+		card.setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		card.setNumber("1234567890123456");
 		card.setHolder("IVAN PETROV");
 		card.setExpirationDate(LocalDate.now().plusYears(1));
@@ -66,7 +67,7 @@ class CardServiceImplTest {
 
 	private CardResponseDto createCardResponseDto() {
 		CardResponseDto response = new CardResponseDto();
-		response.setId(1L);
+		response.setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		response.setLastFourDigits("3456");
 		response.setMaskedHolder("IVAN P***");
 		response.setExpirationDate(LocalDate.now().plusYears(1));
@@ -81,17 +82,17 @@ class CardServiceImplTest {
 		Card savedCard = createCard();
 		CardResponseDto expectedResponse = createCardResponseDto();
 
-		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+		when(userRepository.findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.of(user));
 		when(cardRepository.existsByUserAndNumber(user, "1234567890123456")).thenReturn(false);
 		when(cardMapper.toEntity(request)).thenReturn(card);
 		when(cardRepository.save(card)).thenReturn(savedCard);
 		when(cardMapper.toResponseDto(savedCard)).thenReturn(expectedResponse);
 
-		CardResponseDto result = cardService.createCard(1L, request);
+		CardResponseDto result = cardService.createCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), request);
 
 		assertNotNull(result);
 		assertEquals(expectedResponse, result);
-		verify(userRepository).findById(1L);
+		verify(userRepository).findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verify(cardRepository).existsByUserAndNumber(user, "1234567890123456");
 		verify(cardMapper).toEntity(request);
 		verify(cardRepository).save(card);
@@ -101,10 +102,10 @@ class CardServiceImplTest {
 	@Test
 	void createCard_shouldThrowUserNotFoundException_whenUserNotExists() {
 		CardRequestDto request = createCardRequestDto();
-		when(userRepository.findById(1L)).thenReturn(Optional.empty());
+		when(userRepository.findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.empty());
 
-		assertThrows(UserNotFoundException.class, () -> cardService.createCard(1L, request));
-		verify(userRepository).findById(1L);
+		assertThrows(UserNotFoundException.class, () -> cardService.createCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), request));
+		verify(userRepository).findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verifyNoMoreInteractions(userRepository);
 		verifyNoInteractions(cardRepository, cardMapper);
 	}
@@ -114,11 +115,11 @@ class CardServiceImplTest {
 		User user = createUser();
 		CardRequestDto request = createCardRequestDto();
 
-		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+		when(userRepository.findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.of(user));
 		when(cardRepository.existsByUserAndNumber(user, "1234567890123456")).thenReturn(true);
 
-		assertThrows(DuplicateCardException.class, () -> cardService.createCard(1L, request));
-		verify(userRepository).findById(1L);
+		assertThrows(DuplicateCardException.class, () -> cardService.createCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), request));
+		verify(userRepository).findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verify(cardRepository).existsByUserAndNumber(user, "1234567890123456");
 		verifyNoMoreInteractions(cardRepository);
 		verifyNoInteractions(cardMapper);
@@ -130,15 +131,15 @@ class CardServiceImplTest {
 		CardRequestDto request = createCardRequestDto();
 		CardResponseDto expectedResponse = createCardResponseDto();
 
-		when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+		when(cardRepository.findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.of(card));
 		when(cardRepository.save(card)).thenReturn(card);
 		when(cardMapper.toResponseDto(card)).thenReturn(expectedResponse);
 
-		CardResponseDto result = cardService.updateCard(1L, 1L, request);
+		CardResponseDto result = cardService.updateCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), request);
 
 		assertNotNull(result);
 		assertEquals(expectedResponse, result);
-		verify(cardRepository).findById(1L);
+		verify(cardRepository).findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verify(cardMapper).updateFromDto(card, request);
 		verify(cardRepository).save(card);
 		verify(cardMapper).toResponseDto(card);
@@ -147,10 +148,10 @@ class CardServiceImplTest {
 	@Test
 	void updateCard_shouldThrowCardNotFoundException_whenCardNotExists() {
 		CardRequestDto request = createCardRequestDto();
-		when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+		when(cardRepository.findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.empty());
 
-		assertThrows(CardNotFoundException.class, () -> cardService.updateCard(1L, 1L, request));
-		verify(cardRepository).findById(1L);
+		assertThrows(CardNotFoundException.class, () -> cardService.updateCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), request));
+		verify(cardRepository).findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verifyNoMoreInteractions(cardRepository);
 		verifyNoInteractions(cardMapper);
 	}
@@ -158,13 +159,13 @@ class CardServiceImplTest {
 	@Test
 	void updateCard_shouldThrowCardNotOwnedException_whenUserNotOwner() {
 		Card card = createCard();
-		card.getUser().setId(2L);
+		card.getUser().setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d480"));
 		CardRequestDto request = createCardRequestDto();
 
-		when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+		when(cardRepository.findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.of(card));
 
-		assertThrows(CardNotOwnedException.class, () -> cardService.updateCard(1L, 1L, request));
-		verify(cardRepository).findById(1L);
+		assertThrows(CardNotOwnedException.class, () -> cardService.updateCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), request));
+		verify(cardRepository).findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verifyNoMoreInteractions(cardRepository);
 		verifyNoInteractions(cardMapper);
 	}
@@ -174,23 +175,23 @@ class CardServiceImplTest {
 		Card card = createCard();
 		CardResponseDto expectedResponse = createCardResponseDto();
 
-		when(cardRepository.findByUserIdAndId(1L, 1L)).thenReturn(Optional.of(card));
+		when(cardRepository.findByUserIdAndId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.of(card));
 		when(cardMapper.toResponseDto(card)).thenReturn(expectedResponse);
 
-		CardResponseDto result = cardService.getCardByUserIdAndCardId(1L, 1L);
+		CardResponseDto result = cardService.getCardByUserIdAndCardId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 
 		assertNotNull(result);
 		assertEquals(expectedResponse, result);
-		verify(cardRepository).findByUserIdAndId(1L, 1L);
+		verify(cardRepository).findByUserIdAndId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verify(cardMapper).toResponseDto(card);
 	}
 
 	@Test
 	void getCardByUserIdAndCardId_shouldThrowCardNotFoundException_whenNotExists() {
-		when(cardRepository.findByUserIdAndId(1L, 1L)).thenReturn(Optional.empty());
+		when(cardRepository.findByUserIdAndId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.empty());
 
-		assertThrows(CardNotFoundException.class, () -> cardService.getCardByUserIdAndCardId(1L, 1L));
-		verify(cardRepository).findByUserIdAndId(1L, 1L);
+		assertThrows(CardNotFoundException.class, () -> cardService.getCardByUserIdAndCardId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479")));
+		verify(cardRepository).findByUserIdAndId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verifyNoInteractions(cardMapper);
 	}
 
@@ -200,26 +201,26 @@ class CardServiceImplTest {
 		CardResponseDto response = createCardResponseDto();
 		List<Card> cards = List.of(card);
 
-		when(userRepository.existsById(1L)).thenReturn(true);
-		when(cardRepository.findAllByUserId(1L)).thenReturn(cards);
+		when(userRepository.existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(true);
+		when(cardRepository.findAllByUserId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(cards);
 		when(cardMapper.toResponseDto(card)).thenReturn(response);
 
-		List<CardResponseDto> result = cardService.getAllCardsByUserId(1L);
+		List<CardResponseDto> result = cardService.getAllCardsByUserId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 
 		assertNotNull(result);
 		assertEquals(1, result.size());
 		assertEquals(response, result.get(0));
-		verify(userRepository).existsById(1L);
-		verify(cardRepository).findAllByUserId(1L);
+		verify(userRepository).existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
+		verify(cardRepository).findAllByUserId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verify(cardMapper).toResponseDto(card);
 	}
 
 	@Test
 	void getAllCardsByUserId_shouldThrowUserNotFoundException_whenUserNotExists() {
-		when(userRepository.existsById(1L)).thenReturn(false);
+		when(userRepository.existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(false);
 
-		assertThrows(UserNotFoundException.class, () -> cardService.getAllCardsByUserId(1L));
-		verify(userRepository).existsById(1L);
+		assertThrows(UserNotFoundException.class, () -> cardService.getAllCardsByUserId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479")));
+		verify(userRepository).existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verifyNoInteractions(cardRepository, cardMapper);
 	}
 
@@ -227,48 +228,48 @@ class CardServiceImplTest {
 	void deleteCard_shouldDeleteCard_whenUserIsOwner() {
 		Card card = createCard();
 
-		when(userRepository.existsById(1L)).thenReturn(true);
-		when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+		when(userRepository.existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(true);
+		when(cardRepository.findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.of(card));
 		doNothing().when(cardRepository).delete(card);
 
-		cardService.deleteCard(1L, 1L);
+		cardService.deleteCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 
-		verify(userRepository).existsById(1L);
-		verify(cardRepository).findById(1L);
+		verify(userRepository).existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
+		verify(cardRepository).findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verify(cardRepository).delete(card);
 	}
 
 	@Test
 	void deleteCard_shouldThrowUserNotFoundException_whenUserNotExists() {
-		when(userRepository.existsById(1L)).thenReturn(false);
+		when(userRepository.existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(false);
 
-		assertThrows(UserNotFoundException.class, () -> cardService.deleteCard(1L, 1L));
-		verify(userRepository).existsById(1L);
+		assertThrows(UserNotFoundException.class, () -> cardService.deleteCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479")));
+		verify(userRepository).existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verifyNoInteractions(cardRepository);
 	}
 
 	@Test
 	void deleteCard_shouldThrowCardNotFoundException_whenCardNotExists() {
-		when(userRepository.existsById(1L)).thenReturn(true);
-		when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+		when(userRepository.existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(true);
+		when(cardRepository.findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.empty());
 
-		assertThrows(CardNotFoundException.class, () -> cardService.deleteCard(1L, 1L));
-		verify(userRepository).existsById(1L);
-		verify(cardRepository).findById(1L);
+		assertThrows(CardNotFoundException.class, () -> cardService.deleteCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479")));
+		verify(userRepository).existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
+		verify(cardRepository).findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verifyNoMoreInteractions(cardRepository);
 	}
 
 	@Test
 	void deleteCard_shouldThrowCardNotOwnedException_whenUserNotOwner() {
 		Card card = createCard();
-		card.getUser().setId(2L);
+		card.getUser().setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d480"));
 
-		when(userRepository.existsById(1L)).thenReturn(true);
-		when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+		when(userRepository.existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(true);
+		when(cardRepository.findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))).thenReturn(Optional.of(card));
 
-		assertThrows(CardNotOwnedException.class, () -> cardService.deleteCard(1L, 1L));
-		verify(userRepository).existsById(1L);
-		verify(cardRepository).findById(1L);
+		assertThrows(CardNotOwnedException.class, () -> cardService.deleteCard(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"), UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479")));
+		verify(userRepository).existsById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
+		verify(cardRepository).findById(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		verifyNoMoreInteractions(cardRepository);
 	}
 }

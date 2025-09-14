@@ -11,12 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,6 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 @ExtendWith(MockitoExtension.class)
 @WebMvcTest(CardController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CardControllerTest {
 	@MockitoBean
 	private CardService cardService;
@@ -41,12 +44,10 @@ class CardControllerTest {
 
 	@Test
 	void createCard_ShouldReturnCreatedCard() throws Exception {
-		Long userId = 1L;
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
 		CardRequestDto requestDto = TestCardFactory.createCardRequestDto();
 		CardResponseDto expectedResponse = TestCardFactory.createCardResponseDto();
-
 		when(cardService.createCard(eq(userId), any(CardRequestDto.class))).thenReturn(expectedResponse);
-
 		String responseJson = mockMvc.perform(post("/userservice/users/{userId}/cards", userId)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(requestDto)))
@@ -54,7 +55,6 @@ class CardControllerTest {
 				.andReturn()
 				.getResponse()
 				.getContentAsString();
-
 		CardResponseDto actualResponse = objectMapper.readValue(responseJson, CardResponseDto.class);
 		assertThat(actualResponse).usingRecursiveComparison().isEqualTo(expectedResponse);
 		verify(cardService).createCard(eq(userId), any(CardRequestDto.class));
@@ -62,23 +62,20 @@ class CardControllerTest {
 
 	@Test
 	void updateCard_ShouldUpdateExistingCard() throws Exception {
-		Long userId = 1L;
-		Long cardId = 1L;
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		UUID cardId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
 		CardRequestDto updatedRequestDto = TestCardFactory.createCardRequestDto();
 		updatedRequestDto.setHolder("JOHN CONOR");
 		CardResponseDto expectedResponse = TestCardFactory.createCardResponseDto();
 		expectedResponse.setMaskedHolder(TestCardFactory.maskHolderMethod("JOHN CONOR"));
-
 		when(cardService.updateCard(eq(userId), eq(cardId), any(CardRequestDto.class))).thenReturn(expectedResponse);
-
 		String responseJson = mockMvc.perform(put(("/userservice/users/{userId}/cards/{cardId}"), userId, cardId)
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(updatedRequestDto)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(updatedRequestDto)))
 				.andExpect(status().isOk())
 				.andReturn()
 				.getResponse()
 				.getContentAsString();
-
 		CardResponseDto actualResponse = objectMapper.readValue(responseJson, CardResponseDto.class);
 		assertThat(actualResponse).usingRecursiveComparison().isEqualTo(expectedResponse);
 		verify(cardService).updateCard(eq(userId), eq(cardId), any(CardRequestDto.class));
@@ -86,18 +83,15 @@ class CardControllerTest {
 
 	@Test
 	void getCard_ShouldReturnCardIfExists() throws Exception {
-		Long userId = 1L;
-		Long cardId = 1L;
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		UUID cardId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
 		CardResponseDto expectedResponse = TestCardFactory.createCardResponseDto();
-
 		when(cardService.getCardByUserIdAndCardId(userId, cardId)).thenReturn(expectedResponse);
-
 		String responseJson = mockMvc.perform(get("/userservice/users/{userId}/cards/{cardId}", userId, cardId))
 				.andExpect(status().isOk())
 				.andReturn()
 				.getResponse()
 				.getContentAsString();
-
 		CardResponseDto actualResponse = objectMapper.readValue(responseJson, CardResponseDto.class);
 		assertThat(actualResponse).usingRecursiveComparison().isEqualTo(expectedResponse);
 		verify(cardService).getCardByUserIdAndCardId(eq(userId), eq(cardId));
@@ -105,19 +99,16 @@ class CardControllerTest {
 
 	@Test
 	void getCards_ShouldReturnAllAvailableCardsForUser() throws Exception {
-		Long userId = 1L;
-		CardResponseDto card1 = TestCardFactory.createCardResponseDto(1L, TestCardFactory.maskHolderMethod("JOHN DOE"));
-		CardResponseDto card2 = TestCardFactory.createCardResponseDto(2L, TestCardFactory.maskHolderMethod("ALEX ALEXANDROV"));
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		CardResponseDto card1 = TestCardFactory.createCardResponseDto(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), TestCardFactory.maskHolderMethod("JOHN DOE"));
+		CardResponseDto card2 = TestCardFactory.createCardResponseDto(UUID.fromString("550e8400-e29b-41d4-a716-446655440001"), TestCardFactory.maskHolderMethod("ALEX ALEXANDROV"));
 		List<CardResponseDto> cards = List.of(card1, card2);
-
 		when(cardService.getAllCardsByUserId(userId)).thenReturn(cards);
-
 		String responseJson = mockMvc.perform(get(("/userservice/users/{userId}/cards"), userId))
 				.andExpect(status().isOk())
 				.andReturn()
 				.getResponse()
 				.getContentAsString();
-
 		List<CardResponseDto> actualResponse = objectMapper.readValue(responseJson, new TypeReference<List<CardResponseDto>>() {
 		});
 		assertThat(actualResponse)
@@ -127,14 +118,11 @@ class CardControllerTest {
 
 	@Test
 	void deleteCard_ShouldRemoveCardFromSpecifiedUser() throws Exception {
-		Long userId = 1L;
-		Long cardId = 1L;
-
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		UUID cardId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
 		doNothing().when(cardService).deleteCard(userId, cardId);
-
 		mockMvc.perform(delete("/userservice/users/{userId}/cards/{cardId}", userId, cardId))
 				.andExpect(status().isNoContent());
-
 		verify(cardService).deleteCard(userId, cardId);
 	}
 }

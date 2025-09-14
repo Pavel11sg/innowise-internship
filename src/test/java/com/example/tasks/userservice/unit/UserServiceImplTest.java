@@ -1,5 +1,6 @@
 package com.example.tasks.userservice.unit;
 
+
 import com.example.tasks.userservice.dto.UserRequestDto;
 import com.example.tasks.userservice.dto.UserResponseDto;
 import com.example.tasks.userservice.exception.DuplicateEmailException;
@@ -13,11 +14,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -45,7 +48,7 @@ class UserServiceImplTest {
 
 	private User createUserEntity() {
 		User user = new User();
-		user.setId(1L);
+		user.setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		user.setName("John");
 		user.setSurname("Doe");
 		user.setEmail("test@example.com");
@@ -55,7 +58,7 @@ class UserServiceImplTest {
 
 	private UserResponseDto createUserResponseDto() {
 		UserResponseDto response = new UserResponseDto();
-		response.setId(1L);
+		response.setId(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"));
 		response.setName("John");
 		response.setSurname("Doe");
 		response.setMaskedEmail("t***t@example.com");
@@ -66,6 +69,7 @@ class UserServiceImplTest {
 	@Test
 	void createUser_shouldReturnUserResponseDto_whenEmailIsUnique() {
 		UserRequestDto request = createUserRequestDto();
+		String userId = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
 		User userEntity = new User();
 		User savedUser = createUserEntity();
 		UserResponseDto expectedResponse = createUserResponseDto();
@@ -75,7 +79,7 @@ class UserServiceImplTest {
 		when(userRepository.save(userEntity)).thenReturn(savedUser);
 		when(userMapper.toResponseDto(savedUser)).thenReturn(expectedResponse);
 
-		UserResponseDto result = userService.createUser(request);
+		UserResponseDto result = userService.createUser(request, userId);
 
 		assertNotNull(result);
 		assertEquals(expectedResponse, result);
@@ -88,11 +92,12 @@ class UserServiceImplTest {
 	@Test
 	void createUser_ShouldThrowDuplicateEmailException_WhenEmailExists() {
 		UserRequestDto request = createUserRequestDto();
+		String userId = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
 		when(userRepository.existsByEmail("test@example.com")).thenReturn(true);
 
 		DuplicateEmailException exception = assertThrows(
 				DuplicateEmailException.class,
-				() -> userService.createUser(request)
+				() -> userService.createUser(request, userId)
 		);
 
 		assertEquals("Email already exists: test@example.com", exception.getMessage());
@@ -102,8 +107,9 @@ class UserServiceImplTest {
 	}
 
 	@Test
-	void updateUser_ShouldUpdate_WhenEmailNotChanged() {
-		Long userId = 1L;
+	void updateUser_ShouldUpdate_WhenEmailNotChangedAndAuthorized() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
 		UserRequestDto request = createUserRequestDto();
 		User existingUser = createUserEntity();
 		UserResponseDto expectedResponse = createUserResponseDto();
@@ -112,7 +118,7 @@ class UserServiceImplTest {
 		when(userRepository.save(existingUser)).thenReturn(existingUser);
 		when(userMapper.toResponseDto(existingUser)).thenReturn(expectedResponse);
 
-		UserResponseDto result = userService.updateUser(userId, request);
+		UserResponseDto result = userService.updateUser(userId, request, userIdFromToken);
 
 		assertNotNull(result);
 		assertEquals(expectedResponse, result);
@@ -124,14 +130,13 @@ class UserServiceImplTest {
 	}
 
 	@Test
-	void updateUser_ShouldReturnUpdatedUser_WhenEmailChangedAndUnique() {
-		Long userId = 1L;
+	void updateUser_ShouldReturnUpdatedUser_WhenEmailChangedAndUniqueAndAuthorized() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
 		UserRequestDto request = createUserRequestDto();
 		request.setEmail("new@example.com");
-
 		User existingUser = createUserEntity();
 		existingUser.setEmail("old@example.com");
-
 		UserResponseDto expectedResponse = createUserResponseDto();
 		expectedResponse.setMaskedEmail("new@example.com");
 
@@ -140,7 +145,7 @@ class UserServiceImplTest {
 		when(userRepository.save(existingUser)).thenReturn(existingUser);
 		when(userMapper.toResponseDto(existingUser)).thenReturn(expectedResponse);
 
-		UserResponseDto result = userService.updateUser(userId, request);
+		UserResponseDto result = userService.updateUser(userId, request, userIdFromToken);
 
 		assertNotNull(result);
 		assertEquals(expectedResponse, result);
@@ -153,10 +158,10 @@ class UserServiceImplTest {
 
 	@Test
 	void updateUser_ShouldThrowDuplicateEmailException_WhenEmailChangedAndExists() {
-		Long userId = 1L;
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
 		UserRequestDto request = createUserRequestDto();
 		request.setEmail("existing@example.com");
-
 		User existingUser = createUserEntity();
 		existingUser.setEmail("old@example.com");
 
@@ -164,7 +169,7 @@ class UserServiceImplTest {
 		when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
 
 		assertThrows(DuplicateEmailException.class, () -> {
-			userService.updateUser(userId, request);
+			userService.updateUser(userId, request, userIdFromToken);
 		});
 
 		verify(userRepository).findById(userId);
@@ -174,44 +179,97 @@ class UserServiceImplTest {
 
 	@Test
 	void updateUser_ShouldThrowUserNotFoundException_WhenUserNotExists() {
-		Long userId = 1L;
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
 		UserRequestDto request = createUserRequestDto();
+
 		when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
 		UserNotFoundException exception = assertThrows(
 				UserNotFoundException.class,
-				() -> userService.updateUser(userId, request)
+				() -> userService.updateUser(userId, request, userIdFromToken)
 		);
 
-		assertEquals("User not found with id: 1", exception.getMessage());
+		assertEquals("User not found with id: f47ac10b-58cc-4372-a567-0e02b2c3d479", exception.getMessage());
 		verify(userRepository).findById(userId);
 		verifyNoMoreInteractions(userRepository);
 		verifyNoInteractions(userMapper);
 	}
 
 	@Test
-	void deleteUser_ShouldDeleteUser_WhenExists() {
-		Long userId = 1L;
+	void updateUser_ShouldThrowForbiddenException_WhenNotAuthorized() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d480";
+		UserRequestDto request = createUserRequestDto();
+
+		ResponseStatusException exception = assertThrows(
+				ResponseStatusException.class,
+				() -> userService.updateUser(userId, request, userIdFromToken)
+		);
+
+		assertEquals("403 FORBIDDEN \"You are not authorized to update this user's data\"", exception.getMessage());
+		verifyNoInteractions(userRepository);
+		verifyNoInteractions(userMapper);
+	}
+
+	@Test
+	void deleteUser_ShouldDeleteUser_WhenExistsAndSelfDeletion() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
+		String userRoles = "ROLE_USER";
 		User user = createUserEntity();
+
 		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 		doNothing().when(userRepository).delete(user);
 
-		userService.deleteUser(userId);
+		userService.deleteUser(userId, userIdFromToken, userRoles);
 
 		verify(userRepository).findById(userId);
 		verify(userRepository).delete(user);
 	}
 
 	@Test
-	void getUserById_ShouldReturnUser_WhenExists() {
-		Long userId = 1L;
+	void deleteUser_ShouldDeleteUser_WhenExistsAndAdmin() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d480";
+		String userRoles = "ROLE_ADMIN";
+		User user = createUserEntity();
+
+		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+		doNothing().when(userRepository).delete(user);
+
+		userService.deleteUser(userId, userIdFromToken, userRoles);
+
+		verify(userRepository).findById(userId);
+		verify(userRepository).delete(user);
+	}
+
+	@Test
+	void deleteUser_ShouldThrowForbiddenException_WhenNotAuthorized() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d480";
+		String userRoles = "ROLE_USER";
+
+		ResponseStatusException exception = assertThrows(
+				ResponseStatusException.class,
+				() -> userService.deleteUser(userId, userIdFromToken, userRoles)
+		);
+
+		assertEquals("403 FORBIDDEN \"You are not authorized to delete this user's data\"", exception.getMessage());
+		verifyNoInteractions(userRepository);
+	}
+
+	@Test
+	void getUserById_ShouldReturnUser_WhenExistsAndAuthorized() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
 		User user = createUserEntity();
 		UserResponseDto expectedResponse = createUserResponseDto();
 
 		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 		when(userMapper.toResponseDto(user)).thenReturn(expectedResponse);
 
-		UserResponseDto result = userService.getUserById(userId);
+		UserResponseDto result = userService.getUserById(userId, userIdFromToken);
 
 		assertNotNull(result);
 		assertEquals(expectedResponse, result);
@@ -220,14 +278,30 @@ class UserServiceImplTest {
 	}
 
 	@Test
-	void getAllUsers_ShouldReturnListOfUsers() {
+	void getUserById_ShouldThrowForbiddenException_WhenNotAuthorized() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		String userIdFromToken = "f47ac10b-58cc-4372-a567-0e02b2c3d480";
+
+		ResponseStatusException exception = assertThrows(
+				ResponseStatusException.class,
+				() -> userService.getUserById(userId, userIdFromToken)
+		);
+
+		assertEquals("403 FORBIDDEN \"You are not authorized to see this user's data\"", exception.getMessage());
+		verifyNoInteractions(userRepository);
+		verifyNoInteractions(userMapper);
+	}
+
+	@Test
+	void getAllUsers_ShouldReturnListOfUsers_WhenAdmin() {
 		User user = createUserEntity();
 		UserResponseDto response = createUserResponseDto();
+		String roles = "ROLE_ADMIN";
 
 		when(userRepository.findAll()).thenReturn(List.of(user));
 		when(userMapper.toResponseDto(user)).thenReturn(response);
 
-		List<UserResponseDto> result = userService.getAllUsers();
+		List<UserResponseDto> result = userService.getAllUsers(roles);
 
 		assertNotNull(result);
 		assertEquals(1, result.size());
@@ -237,14 +311,76 @@ class UserServiceImplTest {
 	}
 
 	@Test
-	void getAllUsers_ShouldReturnEmptyList_WhenNoUsers() {
+	void getAllUsers_ShouldReturnEmptyList_WhenNoUsersAndAdmin() {
+		String roles = "ROLE_ADMIN";
 		when(userRepository.findAll()).thenReturn(Collections.emptyList());
 
-		List<UserResponseDto> result = userService.getAllUsers();
+		List<UserResponseDto> result = userService.getAllUsers(roles);
 
 		assertNotNull(result);
 		assertTrue(result.isEmpty());
 		verify(userRepository).findAll();
+		verifyNoInteractions(userMapper);
+	}
+
+	@Test
+	void getAllUsers_ShouldThrowForbiddenException_WhenNotAdmin() {
+		String roles = "ROLE_USER";
+
+		ResponseStatusException exception = assertThrows(
+				ResponseStatusException.class,
+				() -> userService.getAllUsers(roles)
+		);
+
+		assertEquals("403 FORBIDDEN \"Access denied. Required role: ADMIN\"", exception.getMessage());
+		verifyNoInteractions(userRepository);
+		verifyNoInteractions(userMapper);
+	}
+
+	@Test
+	void getUsersByIds_ShouldReturnUsers_WhenAdmin() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		List<UUID> ids = List.of(userId);
+		String roles = "ROLE_ADMIN";
+		User user = createUserEntity();
+		UserResponseDto response = createUserResponseDto();
+
+		when(userRepository.findAllByIdIn(ids)).thenReturn(List.of(user));
+		when(userMapper.toResponseDto(user)).thenReturn(response);
+
+		List<UserResponseDto> result = userService.getUsersByIds(ids, roles);
+
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertEquals(response, result.get(0));
+		verify(userRepository).findAllByIdIn(ids);
+		verify(userMapper).toResponseDto(user);
+	}
+
+	@Test
+	void getUsersByIds_ShouldReturnEmptyList_WhenNoIdsAndAdmin() {
+		String roles = "ROLE_ADMIN";
+		List<UserResponseDto> result = userService.getUsersByIds(Collections.emptyList(), roles);
+
+		assertNotNull(result);
+		assertTrue(result.isEmpty());
+		verifyNoInteractions(userRepository);
+		verifyNoInteractions(userMapper);
+	}
+
+	@Test
+	void getUsersByIds_ShouldThrowForbiddenException_WhenNotAdmin() {
+		UUID userId = UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479");
+		List<UUID> ids = List.of(userId);
+		String roles = "ROLE_USER";
+
+		ResponseStatusException exception = assertThrows(
+				ResponseStatusException.class,
+				() -> userService.getUsersByIds(ids, roles)
+		);
+
+		assertEquals("403 FORBIDDEN \"Access denied. Required role: ADMIN\"", exception.getMessage());
+		verifyNoInteractions(userRepository);
 		verifyNoInteractions(userMapper);
 	}
 }

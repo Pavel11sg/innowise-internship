@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -16,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode
 public class UserResponseDto {
-	private Long id;
+	private UUID id;
 	private String name;
 	private String surname;
 	private String maskedEmail;

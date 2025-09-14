@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/userservice/users/{userId}/cards")
@@ -25,30 +26,30 @@ public class CardController {
 	private final CardService cardService;
 
 	@PostMapping
-	public ResponseEntity<CardResponseDto> createCard(@PathVariable(name = "userId") Long userId, @Valid @RequestBody CardRequestDto cardRequestDto) {
+	public ResponseEntity<CardResponseDto> createCard(@PathVariable(name = "userId") UUID userId, @Valid @RequestBody CardRequestDto cardRequestDto) {
 		CardResponseDto card = cardService.createCard(userId, cardRequestDto);
 		return ResponseEntity.status(HttpStatus.CREATED).body(card);
 	}
 
 	@PutMapping("/{cardId}")
-	public ResponseEntity<CardResponseDto> updateCard(@PathVariable(name = "userId") Long userId,
-													  @PathVariable(name = "cardId") Long cardId,
+	public ResponseEntity<CardResponseDto> updateCard(@PathVariable(name = "userId") UUID userId,
+													  @PathVariable(name = "cardId") UUID cardId,
 													  @Valid @RequestBody CardRequestDto cardRequestDto) {
 		CardResponseDto card = cardService.updateCard(userId, cardId, cardRequestDto);
 		return ResponseEntity.ok(card);
 	}
 
 	@GetMapping("/{cardId}")
-	public ResponseEntity<CardResponseDto> getCard(@PathVariable(name = "userId") Long userId, @PathVariable(name = "cardId") Long cardId) {
+	public ResponseEntity<CardResponseDto> getCard(@PathVariable(name = "userId") UUID userId, @PathVariable(name = "cardId") UUID cardId) {
 		return ResponseEntity.ok(cardService.getCardByUserIdAndCardId(userId, cardId));
 	}
 
 	@GetMapping()
-	public ResponseEntity<List<CardResponseDto>> getCards(@PathVariable(name = "userId") Long userId) {
+	public ResponseEntity<List<CardResponseDto>> getCards(@PathVariable(name = "userId") UUID userId) {
 		return ResponseEntity.ok(cardService.getAllCardsByUserId(userId));
 	}
 	@DeleteMapping("/{cardId}")
-	public ResponseEntity<Void> deleteCard(@PathVariable(name = "userId") Long userId, @PathVariable(name = "cardId") Long cardId) {
+	public ResponseEntity<Void> deleteCard(@PathVariable(name = "userId") UUID userId, @PathVariable(name = "cardId") UUID cardId) {
 		cardService.deleteCard(userId, cardId);
 		return ResponseEntity.noContent().build();
 	}

@@ -6,50 +6,88 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 	@ExceptionHandler(UserNotFoundException.class)
-	public ResponseEntity<String> handleUserNotFound(UserNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+	public ResponseEntity<ErrorResponseDto> handleUserNotFound(UserNotFoundException ex,
+															   WebRequest request) {
+		ErrorResponseDto errorResponse = new ErrorResponseDto(
+				HttpStatus.NOT_FOUND.value(),
+				"User not found",
+				ex.getMessage(),
+				request.getDescription(false).replace("uri=", "")
+		);
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
 	}
 
 	@ExceptionHandler(DuplicateEmailException.class)
-	public ResponseEntity<String> handleDuplicateEmail(DuplicateEmailException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+	public ResponseEntity<ErrorResponseDto> handleDuplicateEmail(DuplicateEmailException ex,
+																 WebRequest request) {
+		ErrorResponseDto errorResponse = new ErrorResponseDto(
+				HttpStatus.CONFLICT.value(),
+				"Duplicate email",
+				ex.getMessage(),
+				request.getDescription(false).replace("uri=", "")
+		);
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
 	}
 
 	@ExceptionHandler(DuplicateCardException.class)
-	public ResponseEntity<Map<String, String>> handleDuplicateCard(
-			DuplicateCardException ex) {
-		Map<String, String> error = new HashMap<>();
-		error.put("error", "Duplicate card");
-		error.put("message", ex.getMessage());
-		error.put("timestamp", LocalDateTime.now().toString());
-		return ResponseEntity
-				.status(HttpStatus.CONFLICT)
-				.body(error);
+	public ResponseEntity<ErrorResponseDto> handleDuplicateCard(DuplicateCardException ex,
+																WebRequest request) {
+		ErrorResponseDto errorResponse = new ErrorResponseDto(
+				HttpStatus.CONFLICT.value(),
+				"Duplicate card",
+				ex.getMessage(),
+				request.getDescription(false).replace("uri=", "")
+		);
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
 	}
 
 	@ExceptionHandler(CardNotFoundException.class)
-	public ResponseEntity<String> handleCardNotFound(CardNotFoundException ex) {
-		return ResponseEntity
-				.status(HttpStatus.NOT_FOUND)
-				.body(ex.getMessage());
+	public ResponseEntity<ErrorResponseDto> handleCardNotFound(CardNotFoundException ex,
+															   WebRequest request) {
+		ErrorResponseDto errorResponse = new ErrorResponseDto(
+				HttpStatus.NOT_FOUND.value(),
+				"Card not found",
+				ex.getMessage(),
+				request.getDescription(false).replace("uri=", "")
+		);
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+	public ResponseEntity<ErrorResponseDto> handleValidationExceptions(MethodArgumentNotValidException ex,
+																	   WebRequest request) {
 		Map<String, String> errors = new HashMap<>();
 		ex.getBindingResult().getAllErrors().forEach((error) -> {
 			String fieldName = ((FieldError) error).getField();
 			String errorMessage = error.getDefaultMessage();
 			errors.put(fieldName, errorMessage);
 		});
-		return ResponseEntity.badRequest().body(errors);
+		ErrorResponseDto errorResponse = new ErrorResponseDto(
+				HttpStatus.BAD_REQUEST.value(),
+				"Validation failed",
+				errors.toString(),
+				request.getDescription(false).replace("uri=", "")
+		);
+		return ResponseEntity.badRequest().body(errorResponse);
+	}
+
+	@ExceptionHandler(InvalidTokenException.class)
+	public ResponseEntity<ErrorResponseDto> handleInvalidToken(InvalidTokenException ex, WebRequest request) {
+		return ResponseEntity
+				.status(HttpStatus.UNAUTHORIZED)
+				.body(new ErrorResponseDto(
+						HttpStatus.UNAUTHORIZED.value(),
+						"INVALID_TOKEN",
+						ex.getMessage(),
+						request.getDescription(false)
+				));
 	}
 }

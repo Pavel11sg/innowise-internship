@@ -5,6 +5,7 @@ import com.example.tasks.userservice.dto.CardResponseDto;
 import com.example.tasks.userservice.model.Card;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 public class TestCardFactory {
 	public static Card createCardEntity() {
@@ -56,13 +57,13 @@ public class TestCardFactory {
 		return cardResponseDto;
 	}
 
-	public static CardResponseDto createCardResponseDto(Long cardId) {
+	public static CardResponseDto createCardResponseDto(UUID cardId) {
 		CardResponseDto cardResponseDto = createCardResponseDto();
 		cardResponseDto.setId(cardId);
 		return cardResponseDto;
 	}
 
-	public static CardResponseDto createCardResponseDto(Long cardId, String maskedHolder) {
+	public static CardResponseDto createCardResponseDto(UUID cardId, String maskedHolder) {
 		CardResponseDto cardResponseDto = createCardResponseDto();
 		cardResponseDto.setId(cardId);
 		cardResponseDto.setMaskedHolder(maskedHolder);
@@ -75,7 +76,7 @@ public class TestCardFactory {
 		return cardResponseDto;
 	}
 
-	public static CardResponseDto createCardResponseDto(Long cardId, LocalDate expirationDate) {
+	public static CardResponseDto createCardResponseDto(UUID cardId, LocalDate expirationDate) {
 		CardResponseDto cardResponseDto = createCardResponseDto();
 		cardResponseDto.setId(cardId);
 		cardResponseDto.setExpirationDate(expirationDate);

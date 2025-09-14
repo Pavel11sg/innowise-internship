@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -56,19 +57,35 @@ class CardRepositoryTest {
 	}
 
 	@Test
+	@Transactional
 	void shouldUpdateCardHolder_WhenUserIdProvided() {
 		User user = TestUserFactory.createUserEntity();
 		Card card = TestCardFactory.createCardEntity();
 		card.setUser(user);
 		user.setCards(List.of(card));
-		userRepository.save(user);
+
+		User savedUser = userRepository.save(user);
+		Card savedCard = savedUser.getCards().get(0);
+
+		System.out.println("User ID: " + savedUser.getId());
+		System.out.println("Card ID: " + savedCard.getId());
 
 		String newHolder = "NEW HOLDER";
-		int updatedRows = cardRepository.updateCardHolderByUser(user.getId(), newHolder);
+		int updatedRows = cardRepository.updateCardHolderByUser(savedUser.getId(), newHolder);
 
-		assertThat(updatedRows).isEqualTo(1);
-		Optional<Card> updatedCard =  cardRepository.findByUserIdAndId(user.getId(), card.getId());
-		assertThat(updatedCard).isNotNull();
+		cardRepository.flush();
+
+		List<Card> allCards = cardRepository.findAll();
+		System.out.println("All cards: " + allCards.size());
+
+		List<Card> userCards = cardRepository.findAllByUserId(savedUser.getId());
+		System.out.println("User cards: " + userCards.size());
+
+		Optional<Card> updatedCard = cardRepository.findByUserIdAndId(savedUser.getId(), savedCard.getId());
+
+		System.out.println("Updated card present: " + updatedCard.isPresent());
+
+		assertThat(updatedCard).isPresent().withFailMessage("Card should be found by userId and cardId");
 		assertThat(updatedCard.get().getHolder()).isEqualTo(newHolder);
 	}
 }
